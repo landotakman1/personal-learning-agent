@@ -30,6 +30,13 @@ function getWeekStart(date = new Date()) {
   return d
 }
 
+function getMonthStart(date = new Date()) {
+  const d = new Date(date)
+  d.setDate(1)
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
 const cardStyle: React.CSSProperties = {
   background: '#1e1e1e',
   border: '1px solid #333',
@@ -60,6 +67,16 @@ const buttonStyle: React.CSSProperties = {
   fontWeight: 500
 }
 
+const smallButtonStyle: React.CSSProperties = {
+  padding: '4px 10px',
+  background: '#444',
+  color: '#eee',
+  border: 'none',
+  borderRadius: 4,
+  cursor: 'pointer',
+  fontSize: 13
+}
+
 export default function App() {
   const [profile, setProfile] = useState<Profile>(defaultProfile)
   const [activities, setActivities] = useState<Activity[]>([])
@@ -68,6 +85,7 @@ export default function App() {
     description: '',
     minutes: 30
   })
+  const [newSkillArea, setNewSkillArea] = useState('')
 
   useEffect(() => {
     const savedProfile = localStorage.getItem('pla-profile')
@@ -84,6 +102,13 @@ export default function App() {
     localStorage.setItem('pla-activities', JSON.stringify(activities))
   }, [activities])
 
+  // Keep newActivity.skillArea valid if skill areas change
+  useEffect(() => {
+    if (!profile.skillAreas.includes(newActivity.skillArea) && profile.skillAreas.length > 0) {
+      setNewActivity(prev => ({ ...prev, skillArea: profile.skillAreas[0] }))
+    }
+  }, [profile.skillAreas])
+
   const addActivity = () => {
     if (!newActivity.description.trim()) return
     const activity: Activity = {
@@ -99,6 +124,19 @@ export default function App() {
     setProfile(prev => ({ ...prev, [field]: value }))
   }
 
+  const addSkillArea = () => {
+    const trimmed = newSkillArea.trim()
+    if (!trimmed || profile.skillAreas.includes(trimmed)) return
+    updateProfile('skillAreas', [...profile.skillAreas, trimmed])
+    setNewSkillArea('')
+  }
+
+  const removeSkillArea = (area: string) => {
+    if (profile.skillAreas.length <= 1) return // keep at least one
+    updateProfile('skillAreas', profile.skillAreas.filter(a => a !== area))
+  }
+
+  // Weekly
   const weekStart = getWeekStart()
   const thisWeekActivities = activities.filter(a => new Date(a.date) >= weekStart)
   const weeklyTotals = thisWeekActivities.reduce((acc, a) => {
@@ -106,6 +144,15 @@ export default function App() {
     return acc
   }, {} as Record<string, number>)
   const totalMinutesThisWeek = thisWeekActivities.reduce((sum, a) => sum + a.minutes, 0)
+
+  // Monthly
+  const monthStart = getMonthStart()
+  const thisMonthActivities = activities.filter(a => new Date(a.date) >= monthStart)
+  const monthlyTotals = thisMonthActivities.reduce((acc, a) => {
+    acc[a.skillArea] = (acc[a.skillArea] || 0) + a.minutes
+    return acc
+  }, {} as Record<string, number>)
+  const totalMinutesThisMonth = thisMonthActivities.reduce((sum, a) => sum + a.minutes, 0)
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', padding: '32px 20px', fontFamily: 'system-ui, sans-serif', color: '#eee' }}>
@@ -133,9 +180,34 @@ export default function App() {
               style={inputStyle}
             />
           </label>
-          <div style={{ fontSize: 14, textAlign: 'center' }}>
-            <span style={{ color: '#aaa' }}>Skill Areas: </span>
-            {profile.skillAreas.join(', ')}
+
+          {/* Editable Skill Areas */}
+          <div style={{ width: '100%', maxWidth: 480 }}>
+            <div style={{ marginBottom: 8, fontSize: 14, color: '#aaa', textAlign: 'center' }}>Skill Areas</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginBottom: 12 }}>
+              {profile.skillAreas.map(area => (
+                <div key={area} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#2a2a2a', padding: '4px 10px', borderRadius: 20 }}>
+                  <span>{area}</span>
+                  <button
+                    onClick={() => removeSkillArea(area)}
+                    style={{ ...smallButtonStyle, padding: '2px 6px', background: '#555' }}
+                    title="Remove"
+                  >
+                    x
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <input
+                placeholder="Add a skill area"
+                value={newSkillArea}
+                onChange={e => setNewSkillArea(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addSkillArea()}
+                style={{ ...inputStyle, maxWidth: 240 }}
+              />
+              <button onClick={addSkillArea} style={buttonStyle}>Add</button>
+            </div>
           </div>
         </div>
       </section>
@@ -185,6 +257,26 @@ export default function App() {
         ) : (
           <div style={{ display: 'grid', gap: 8, maxWidth: 400, margin: '0 auto' }}>
             {Object.entries(weeklyTotals).map(([skill, mins]) => (
+              <div key={skill} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #333' }}>
+                <span>{skill}</span>
+                <strong>{mins} min</strong>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* This Month */}
+      <section style={{ ...cardStyle, background: '#252525' }}>
+        <h2 style={{ marginTop: 0, textAlign: 'center' }}>This Month</h2>
+        <p style={{ fontSize: 18, margin: '8px 0 16px', textAlign: 'center' }}>
+          <strong>{totalMinutesThisMonth}</strong> minutes total
+        </p>
+        {Object.keys(monthlyTotals).length === 0 ? (
+          <p style={{ color: '#888', margin: 0, textAlign: 'center' }}>No activities logged this month yet.</p>
+        ) : (
+          <div style={{ display: 'grid', gap: 8, maxWidth: 400, margin: '0 auto' }}>
+            {Object.entries(monthlyTotals).map(([skill, mins]) => (
               <div key={skill} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #333' }}>
                 <span>{skill}</span>
                 <strong>{mins} min</strong>

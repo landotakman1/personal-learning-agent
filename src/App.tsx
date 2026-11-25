@@ -125,7 +125,8 @@ export default function App() {
   const [newActivity, setNewActivity] = useState({
     skillArea: defaultProfile.skillAreas[0],
     description: '',
-    minutes: 30
+    minutes: 30,
+    date: new Date().toISOString().split('T')[0] // defaults to today
   })
   const [newSkillArea, setNewSkillArea] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -156,11 +157,17 @@ export default function App() {
     if (!newActivity.description.trim()) return
     const activity: Activity = {
       id: crypto.randomUUID(),
-      date: new Date().toISOString().split('T')[0],
-      ...newActivity
+      date: newActivity.date,
+      skillArea: newActivity.skillArea,
+      description: newActivity.description,
+      minutes: newActivity.minutes
     }
     setActivities(prev => [activity, ...prev])
-    setNewActivity(prev => ({ ...prev, description: '' }))
+    setNewActivity(prev => ({
+        ...prev,
+        description: '',
+        date: new Date().toISOString().split('T')[0]
+      }))
   }
 
   const updateProfile = (field: keyof Profile, value: string | string[]) => {
@@ -291,6 +298,7 @@ export default function App() {
         <h2 style={{ marginTop: 0, textAlign: 'center' }}>Log Activity</h2>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <input type="date" value="{newActivity.date}" onChange={e => setNewActivity(prev => ({ ...prev, date: e.target.value }))} style={{ ...inputStyle, width: 'auto', maxWidth: 160 }} />
             <select
               value={newActivity.skillArea}
               onChange={e => setNewActivity(prev => ({ ...prev, skillArea: e.target.value }))}

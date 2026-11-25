@@ -3,6 +3,7 @@ const cardStyle: React.CSSProperties = {
   background: '#1a2332',
   border: '1px solid #3b82f6',
   borderRadius: 12,
+  boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
   padding: 24,
   marginBottom: 24
 }

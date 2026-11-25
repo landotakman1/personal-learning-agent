@@ -3,6 +3,7 @@ const cardStyle: React.CSSProperties = {
   background: '#252525',
   border: '1px solid #333',
   borderRadius: 12,
+  boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
   padding: 24,
   marginBottom: 24
 }
@@ -22,7 +23,7 @@ export default function Summaries({ title, total, totals, emptyMessage }: Props)
         <strong>{total}</strong> minutes total
       </p>
       {Object.keys(totals).length === 0 ? (
-        <p style={{ color: '#888', margin: 0, textAlign: 'center' }}>{emptyMessage}</p>
+        <p style={{ color: '#888', margin: 0, textAlign: 'center', fontStyle: 'italic' }}>{emptyMessage}</p>
       ) : (
         <div style={{ display: 'grid', gap: 8, maxWidth: 400, margin: '0 auto' }}>
           {Object.entries(totals).map(([skill, mins]) => (

@@ -40,3 +40,15 @@
 .read-the-docs {
   color: #888;
 }
+
+button {
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+button: hover {
+    filter: brightness(1.1);
+  }
+
+button:active {
+    transform: scale(0.98);
+  }

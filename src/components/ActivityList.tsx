@@ -6,6 +6,7 @@ const cardStyle: React.CSSProperties = {
   background: '#1e1e1e',
   border: '1px solid #333',
   borderRadius: 12,
+  boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
   padding: 24,
   marginBottom: 24
 }
@@ -78,7 +79,7 @@ export default function ActivityList({ activities, profile, onUpdate, onDelete }
     <section style={cardStyle}>
       <h2 style={{ marginTop: 0, textAlign: 'center' }}>Recent Activities</h2>
       {activities.length === 0 ? (
-        <p style={{ color: '#888', margin: 0, textAlign: 'center' }}>No activities logged yet.</p>
+        <p style={{ color: '#888', margin: 0, textAlign: 'center', fontStyle: 'italic' }}>No activities logged yet. Add one above to get started.</p>
       ) : (
         <div style={{ display: 'grid', gap: 16, maxWidth: 520, margin: '0 auto' }}>
           {activities.map(a => (
